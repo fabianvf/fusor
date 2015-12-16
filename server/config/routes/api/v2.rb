@@ -5,6 +5,7 @@ Fusor::Engine.routes.draw do
         resources :deployments do
           member do
             put :deploy
+            post :run_cancel
           end
         end
       end

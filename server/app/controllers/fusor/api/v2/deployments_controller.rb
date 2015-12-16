@@ -77,6 +77,11 @@ module Fusor
       respond_for_async :resource => task
     end
 
+    def run_cancel
+      task = async_task(::Actions::Fusor::CancelTest)
+      respond_for_async :resource => task
+    end
+
     private
 
     def find_deployment
