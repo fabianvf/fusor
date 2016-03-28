@@ -15,7 +15,7 @@ export default Ember.Controller.extend(NeedsDeploymentMixin, {
     return (this.get('rhevSetup') === 'selfhost');
   }),
 
-  engineTabName: Ember.computed('isSelfHost', function() {
+  hypervisorTabName: Ember.computed('isSelfHost', function() {
     if (this.get('isSelfHost')) {
       return 'Engine/Hypervisor';
     } else {
@@ -23,9 +23,18 @@ export default Ember.Controller.extend(NeedsDeploymentMixin, {
     }
   }),
 
-  disableTabRhevSetupType: false,
-  disableTabRhevEngine: false,
+  disableTabRhevHypervisors: Ember.computed(
+    'isSelfHost',
+    'validRhevEngine',
+    function() {
+      return !(this.get('isSelfHost') || this.get('validRhevEngine'));
+    }
+  ),
+  disableTabRhevEngine: Ember.computed('isSelfHost', function(){
+    return this.get('isSelfHost');
+  }),
 
+  disableTabRhevSetupType: false,
   hasEngine: Ember.computed.alias('deploymentController.hasEngine'),
   hasNoEngine: Ember.computed.not('hasEngine'),
 
@@ -39,15 +48,6 @@ export default Ember.Controller.extend(NeedsDeploymentMixin, {
 
   isEngineHostnameValid: Ember.computed.not('engineDiscoveredHostController.isHostnameInvalid'),
   isHypervisorHostnameValid: Ember.computed.not('hypervisorDiscoveredHostController.isHostnameInvalid'),
-  
-
-  disableTabRhevHypervisors: Ember.computed(
-    'isSelfHost',
-    'invalidRhevEngine',
-    function() {
-      return (this.get('isSelfHost') || this.get('invalidRhevEngine'));
-    }
-  ),
 
   disableTabRhevConfiguration: Ember.computed(
     'isSelfHost',
@@ -93,13 +93,14 @@ export default Ember.Controller.extend(NeedsDeploymentMixin, {
   validRhevStorage: Ember.computed.alias("storageController.validRhevStorage"),
 
   validRhev: Ember.computed(
+    'isSelfHost',
     'validRhevSetup',
     'validRhevEngine',
     'validRhevHypervisor',
     'validRhevOptions',
     'validRhevStorage',
     function() {
-      return this.get('validRhevSetup') && this.get('validRhevEngine') && this.get('validRhevHypervisor') &&
+      return this.get('validRhevSetup') && (this.get('validRhevEngine') || this.get('isSelfHost') && this.get('validRhevHypervisor')) &&
              this.get('validRhevOptions') && this.get('validRhevStorage');
     }
   )

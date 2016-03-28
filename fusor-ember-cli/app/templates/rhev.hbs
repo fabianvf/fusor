@@ -4,15 +4,15 @@
         <a>2A. Setup Type</a>
       {{/link-to}}
 
-      {{#link-to 'engine' tagName='li' disabled=disableTabRhevEngine}}
-        <a>2B. {{engineTabName}}</a>
-      {{/link-to}}
-
       {{#unless isSelfHost}}
-      {{#link-to 'hypervisor' tagName='li' disabled=disableTabRhevHypervisors}}
-        <a>2C. Hypervisors</a>
+      {{#link-to 'engine' tagName='li' disabled=disableTabRhevEngine}}
+        <a>2B. Engine</a>
       {{/link-to}}
       {{/unless}}
+
+      {{#link-to 'hypervisor' tagName='li' disabled=disableTabRhevHypervisors}}
+        <a>2C. {{hypervisorTabName }}</a>
+      {{/link-to}}
 
       {{#link-to 'rhev-options' tagName='li' disabled=disableTabRhevConfiguration}}
         <a>{{if isSelfHost '2C' '2D'}}. Configuration</a>
