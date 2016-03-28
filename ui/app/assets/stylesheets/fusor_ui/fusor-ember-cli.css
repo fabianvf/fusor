@@ -786,6 +786,21 @@ h1.num-ose-node {
     color: red;
     font-weight: bold; }
 
+.content-error-container .pre-err-header, .content-error-container .err-spinner {
+  float: left; }
+
+.content-error-container .pre-err-header {
+  margin: 0 15px 0 0; }
+
+.content-error-container .err-spinner {
+  margin-top: 2px; }
+
+.content-error-container a.repo-link {
+  display: block; }
+
+.navbar-outer {
+  z-index: 1200 !important; }
+
 /* wizard.scss */
 .page-header-rhci {
   background: #fafafa;
