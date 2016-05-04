@@ -461,7 +461,7 @@ define('fusor-ember-cli/components/continue-deployment-modal', ['exports', 'embe
     }),
 
     actions: {
-      deleteDeployment: function deleteDeployment() {
+      installDeployment: function installDeployment() {
         this.set('openModal', false);
         this.sendAction('installDeployment', this.get('deployment'));
       },
@@ -5180,15 +5180,23 @@ define('fusor-ember-cli/controllers/rhev', ['exports', 'ember', 'fusor-ember-cli
       return this.get('rhevSetup') === 'selfhost';
     }),
 
+    hypervisorTabStep: _ember['default'].computed('isSelfHost', function () {
+      if (this.get('isSelfHost')) {
+        return 'B';
+      } else {
+        return 'C';
+      }
+    }),
+
     hypervisorTabName: _ember['default'].computed('isSelfHost', function () {
       if (this.get('isSelfHost')) {
         return 'Engine/Hypervisor';
       } else {
-        return 'Engine';
+        return 'Hypervisor';
       }
     }),
 
-    disableTabRhevHypervisors: _ember['default'].computed('isSelfHost', 'invalidRhevEngine', function () {
+    disableTabRhevHypervisors: _ember['default'].computed('isSelfHost', 'validRhevEngine', function () {
       return !(this.get('isSelfHost') || this.get('validRhevEngine'));
     }),
     disableTabRhevEngine: _ember['default'].computed('isSelfHost', function () {
@@ -45002,7 +45010,11 @@ define("fusor-ember-cli/templates/rhev", ["exports"], function (exports) {
             var el1 = dom.createTextNode("        ");
             dom.appendChild(el0, el1);
             var el1 = dom.createElement("a");
-            var el2 = dom.createTextNode("2C. ");
+            var el2 = dom.createTextNode("2");
+            dom.appendChild(el1, el2);
+            var el2 = dom.createComment("");
+            dom.appendChild(el1, el2);
+            var el2 = dom.createTextNode(". ");
             dom.appendChild(el1, el2);
             var el2 = dom.createComment("");
             dom.appendChild(el1, el2);
@@ -45012,11 +45024,13 @@ define("fusor-ember-cli/templates/rhev", ["exports"], function (exports) {
             return el0;
           },
           buildRenderNodes: function buildRenderNodes(dom, fragment, contextualElement) {
-            var morphs = new Array(1);
-            morphs[0] = dom.createMorphAt(dom.childAt(fragment, [1]), 1, 1);
+            var element0 = dom.childAt(fragment, [1]);
+            var morphs = new Array(2);
+            morphs[0] = dom.createMorphAt(element0, 1, 1);
+            morphs[1] = dom.createMorphAt(element0, 3, 3);
             return morphs;
           },
-          statements: [["content", "hypervisorTabName", ["loc", [null, [14, 15], [14, 37]]]]],
+          statements: [["content", "hypervisorTabStep", ["loc", [null, [14, 12], [14, 33]]]], ["content", "hypervisorTabName", ["loc", [null, [14, 35], [14, 57]]]]],
           locals: [],
           templates: []
         };
@@ -50387,11 +50401,11 @@ define('fusor-ember-cli/utils/validators', ['exports', 'ember'], function (expor
 /* jshint ignore:start */
 
 define('fusor-ember-cli/config/environment', ['ember'], function(Ember) {
-  return { 'default': {"modulePrefix":"fusor-ember-cli","environment":"development","baseURL":"/","locationType":"hash","EmberENV":{"FEATURES":{}},"contentSecurityPolicyHeader":"Disabled-Content-Security-Policy","emberDevTools":{"global":true},"APP":{"LOG_ACTIVE_GENERATION":true,"LOG_TRANSITIONS":true,"LOG_VIEW_LOOKUPS":true,"rootElement":"#ember-app","name":"fusor-ember-cli","version":"0.0.0+1be401cc"},"ember-cli-mirage":{"enabled":false,"usingProxy":false},"contentSecurityPolicy":{"default-src":"'none'","script-src":"'self' 'unsafe-eval'","font-src":"'self'","connect-src":"'self'","img-src":"'self'","style-src":"'self'","media-src":"'self'"},"ember-devtools":{"enabled":true,"global":false},"exportApplicationGlobal":true}};
+  return { 'default': {"modulePrefix":"fusor-ember-cli","environment":"development","baseURL":"/","locationType":"hash","EmberENV":{"FEATURES":{}},"contentSecurityPolicyHeader":"Disabled-Content-Security-Policy","emberDevTools":{"global":true},"APP":{"LOG_ACTIVE_GENERATION":true,"LOG_TRANSITIONS":true,"LOG_VIEW_LOOKUPS":true,"rootElement":"#ember-app","name":"fusor-ember-cli","version":"0.0.0+55c132a1"},"ember-cli-mirage":{"enabled":false,"usingProxy":false},"contentSecurityPolicy":{"default-src":"'none'","script-src":"'self' 'unsafe-eval'","font-src":"'self'","connect-src":"'self'","img-src":"'self'","style-src":"'self'","media-src":"'self'"},"ember-devtools":{"enabled":true,"global":false},"exportApplicationGlobal":true}};
 });
 
 if (!runningTests) {
-  require("fusor-ember-cli/app")["default"].create({"LOG_ACTIVE_GENERATION":true,"LOG_TRANSITIONS":true,"LOG_VIEW_LOOKUPS":true,"rootElement":"#ember-app","name":"fusor-ember-cli","version":"0.0.0+1be401cc"});
+  require("fusor-ember-cli/app")["default"].create({"LOG_ACTIVE_GENERATION":true,"LOG_TRANSITIONS":true,"LOG_VIEW_LOOKUPS":true,"rootElement":"#ember-app","name":"fusor-ember-cli","version":"0.0.0+55c132a1"});
 }
 
 /* jshint ignore:end */

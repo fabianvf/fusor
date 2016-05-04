@@ -19,9 +19,11 @@ export default Ember.Controller.extend(NeedsDeploymentMixin, {
     if (this.get('isSelfHost')) {
       return 'Engine/Hypervisor';
     } else {
-      return 'Engine';
+      return 'Hypervisor';
     }
   }),
+
+  engineTabName: 'Engine',
 
   disableTabRhevHypervisors: Ember.computed(
     'isSelfHost',
@@ -51,13 +53,10 @@ export default Ember.Controller.extend(NeedsDeploymentMixin, {
 
   disableTabRhevConfiguration: Ember.computed(
     'isSelfHost',
-    'validRhevEngine',
+    'invalidRhevEngine',
     'invalidRhevHypervisor',
     function() {
-      if (this.get('validRhevEngine')) {
-        return (!this.get('isSelfHost') && this.get('invalidRhevHypervisor'));
-      }
-      return true;
+      return ((!this.get('isSelfHost') && this.get('invalidRhevEngine')) || this.get('invalidRhevHypervisor'));
     }
   ),
 

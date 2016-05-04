@@ -6,12 +6,12 @@
 
       {{#unless isSelfHost}}
       {{#link-to 'engine' tagName='li' disabled=disableTabRhevEngine}}
-        <a>2B. Engine</a>
+        <a>2B. {{engineTabName}}</a>
       {{/link-to}}
       {{/unless}}
 
       {{#link-to 'hypervisor' tagName='li' disabled=disableTabRhevHypervisors}}
-        <a>2C. {{hypervisorTabName }}</a>
+        <a>{{if isSelfHost '2B' '2C'}}. {{hypervisorTabName }}</a>
       {{/link-to}}
 
       {{#link-to 'rhev-options' tagName='li' disabled=disableTabRhevConfiguration}}
