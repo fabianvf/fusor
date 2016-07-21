@@ -111,6 +111,15 @@
         {{review-link label='Data Storage Path' routeName='storage' isDefault=true
                       value=model.rhev_share_path}}
 
+        {{review-link label='ISO Domain Name' routeName='storage' isDefault=true
+                      value=model.rhev_iso_domain_name}}
+
+        {{review-link label='ISO Storage Address' routeName='storage' isDefault=true
+                      value=model.rhev_iso_domain_address}}
+
+        {{review-link label='ISO Storage Path' routeName='storage' isDefault=true
+                      value=model.rhev_iso_domain_path}}
+
         {{#if isCloudForms}}
 
             {{review-link label='Export Domain Name' routeName='storage' isDefault=true

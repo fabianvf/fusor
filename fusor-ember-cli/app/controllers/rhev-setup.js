@@ -27,7 +27,12 @@ export default Ember.Controller.extend(NeedsDeploymentMixin, {
 
   actions: {
     rhevSetupChanged() {
-      this.get('deploymentController').set('model.rhev_is_self_hosted', this.get('isSelfHosted'));
+      var dc = this.get('deploymentController');
+      dc.set('model.rhev_is_self_hosted', this.get('isSelfHosted'));
+      // dc.set('model.discovered_host', null);
+      // dc.set('model.discovered_hosts', []);
+      // console.log(dc.get('mode.rhev_hypervisor_host_ids'));
+      // console.log(dc.get('mode.rhev_engine_host_id'));
     }
   }
 

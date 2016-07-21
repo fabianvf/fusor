@@ -41,6 +41,11 @@ export default DS.Model.extend({
   rhev_export_domain_address: DS.attr('string'),
   rhev_export_domain_path: DS.attr('string'),
 
+  rhev_iso_domain_name: DS.attr('string'),
+  rhev_iso_domain_address: DS.attr('string'),
+  rhev_iso_domain_path: DS.attr('string'),
+
+
   hosted_storage_name: DS.attr('string'),
   hosted_storage_address: DS.attr('string'),
   hosted_storage_path: DS.attr('string'),
@@ -183,6 +188,9 @@ export default DS.Model.extend({
     this.set('rhev_export_domain_name', this.get('rhev_export_domain_name') ? this.get('rhev_export_domain_name').trim() : null);
     this.set('rhev_export_domain_address', this.get('rhev_export_domain_address') ? this.get('rhev_export_domain_address').trim() : null);
     this.set('rhev_export_domain_path', this.get('rhev_export_domain_path') ? this.get('rhev_export_domain_path').trim() : null);
+    this.set('rhev_iso_domain_name', this.get('rhev_iso_domain_name') ? this.get('rhev_iso_domain_name').trim() : null);
+    this.set('rhev_iso_domain_address', this.get('rhev_iso_domain_address') ? this.get('rhev_iso_domain_address').trim() : null);
+    this.set('rhev_iso_domain_path', this.get('rhev_iso_domain_path') ? this.get('rhev_iso_domain_path').trim() : null);
     this.set('hosted_storage_name', this.get('hosted_storage_name') ? this.get('hosted_storage_name').trim() : null);
     this.set('hosted_storage_address', this.get('hosted_storage_address') ? this.get('hosted_storage_address').trim() : null);
     this.set('hosted_storage_path', this.get('hosted_storage_path') ? this.get('hosted_storage_path').trim() : null);

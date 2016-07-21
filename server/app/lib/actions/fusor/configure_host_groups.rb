@@ -250,7 +250,11 @@ module Actions
                 { :name => "export_name", :value => deployment.rhev_export_domain_name },
                 { :name => "export_address", :value => deployment.rhev_export_domain_address },
                 { :name => "export_path", :value => deployment.rhev_export_domain_path },
-                { :name => "mac_address_range", :value => get_mac_address_range(deployment.id)}
+                { :name => "mac_address_range", :value => get_mac_address_range(deployment.id)},
+                { :name => "iso_domain_name", :value => deployment.rhev_iso_domain_name },
+                { :name => "iso_domain_address", :value => deployment.rhev_iso_domain_address },
+                { :name => "iso_domain_path", :value => deployment.rhev_iso_domain_path },
+                { :name => "nfs_config_enabled", :value => deployment.rhev_iso_domain_is_local },
               ]
             },
             {
@@ -259,7 +263,8 @@ module Actions
               [
                 { :name => "storage_type", :value => deployment.rhev_storage_type },
                 { :name => "admin_password", :value => deployment.rhev_engine_admin_password },
-                { :name => "db_password", :value => deployment.rhev_engine_admin_password }
+                { :name => "db_password", :value => deployment.rhev_engine_admin_password },
+
               ]
             }
           ]
@@ -312,6 +317,10 @@ module Actions
                 { :name => "export_name", :value => deployment.rhev_export_domain_name },
                 { :name => "export_address", :value => deployment.rhev_export_domain_address },
                 { :name => "export_path", :value => deployment.rhev_export_domain_path },
+                { :name => "iso_domain_name", :value => deployment.rhev_iso_domain_name },
+                { :name => "iso_domain_address", :value => deployment.rhev_iso_domain_address },
+                { :name => "iso_domain_path", :value => deployment.rhev_iso_domain_path },
+                { :name => "nfs_config_enabled", :value => deployment.rhev_iso_domain_is_local },
                 { :name => "hosted_storage_name", :value => deployment.hosted_storage_name },
                 { :name => "hosted_storage_address", :value => deployment.hosted_storage_address },
                 { :name => "hosted_storage_path", :value => deployment.hosted_storage_path }
