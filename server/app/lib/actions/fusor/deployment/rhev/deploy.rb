@@ -27,44 +27,21 @@ module Actions
                 # Self-hosted RHEV
                 fail _("Unable to locate an RHV Hypervisor Host") unless (deployment.discovered_hosts.count > 0)
 
-                first_host = deployment.discovered_hosts[0]
-                additional_hosts = deployment.discovered_hosts[1..-1]
-                puppetclass_id = Puppetclass.where(:name => 'ovirt::self_hosted::setup').first.id
 
                 plan_action(::Actions::Fusor::Deployment::Rhev::CreateEngineHostRecord, deployment, 'RHV-Self-hosted')
 
-                first_host_overrides = {
-                  puppetclass_id => {
-                    :mac_address => first_host.interfaces.where(:provision => true).try(:first).try(:mac)
-                  }
-                }
-                plan_action(::Actions::Fusor::Host::TriggerProvisioning,
-                            deployment,
-                            "RHV-Self-hosted",
-                            first_host, first_host_overrides)
-
-                plan_action(::Actions::Fusor::Host::WaitUntilProvisioned,
-                            first_host.id, true)
-
-                additional_hosts.each_with_index do |host, index|
-                  overrides = {
-                    puppetclass_id => {
-                     :host_id => (index + 2),
-                     :additional_host => true,
-                     :mac_address => host.interfaces.where(:provision => true).try(:first).try(:mac)
-                    }
-                  }
-                  plan_action(::Actions::Fusor::Host::TriggerProvisioning,
-                              deployment,
-                              "RHV-Self-hosted",
-                              host, overrides)
-                end
                 concurrence do
-                  additional_hosts.each do |host|
+                  deployment.discovered_hosts.each do |host|
+                    plan_action(::Actions::Fusor::Host::TriggerProvisioning,
+                                deployment,
+                                "RHV-Self-hosted",
+                                host)
                     plan_action(::Actions::Fusor::Host::WaitUntilProvisioned,
-                                host.id, true)
+                                host.id)
                   end
                 end
+
+                plan_action(::Actions::Fusor::Deployment::Rhev::TriggerAnsibleRun, deployment)
 
               else
                 # Hypervisor + Engine separate

@@ -13,7 +13,6 @@
 module Actions
   module Fusor
     # TODO Cleanup class to make it shorter
-    # rubocop:disable ClassLength
     class ConfigureHostGroups < Actions::Fusor::FusorBaseAction
       def humanized_name
         _("Configure Host Groups")
@@ -160,7 +159,6 @@ module Actions
           end
         end
         apply_setting_parameter_overrides(hostgroup, hostgroup_settings, puppet_environment)
-        apply_deployment_parameter_overrides(hostgroup, deployment, product_type, puppet_environment)
       end
 
       def apply_setting_parameter_overrides(hostgroup, hostgroup_settings, puppet_environment)
@@ -185,182 +183,6 @@ module Actions
         end
       end
 
-      def apply_deployment_parameter_overrides(hostgroup, deployment, product_type, puppet_environment)
-        # TODO: ISSUE: the following attributes exist on the deployment object, but I do not know
-        # if they should be mapping to puppet class parameters and if so, which class & parameter?
-        # :name => , :value => deployment.rhev_data_center_name,
-        # :name => , :value => deployment.cfme_install_loc,
-        # :name => , :value => deployment.rhev_is_self_hosted,
-
-        # TODO: ISSUE: the following attribute exists on both ovirt::engine::config & ovirt::engine::setup; however,
-        # unclear which one the deployment attribute is associated with
-        # :name => , :value => deployment.rhev_storage_type,
-        deployment_overrides = get_deployment_overrides(deployment, hostgroup, product_type)
-
-        # Check if the host group has some overrides specified for this deployment.
-        # If it does, set them for the host group.
-        if overrides = deployment_overrides.find { |hg| hg[:hostgroup_name] == hostgroup.name }
-          overrides[:puppet_classes].each do |pclass|
-            puppet_class = Puppetclass.where(:name => pclass[:name]).
-                joins(:environment_classes).
-                where("environment_classes.environment_id in (?)", puppet_environment.id).first
-
-            pclass[:parameters].each do |parameter|
-              hostgroup.set_param_value_if_changed(puppet_class, parameter[:name], parameter[:value])
-            end
-          end
-        end
-      end
-
-      def get_deployment_overrides(deployment, hostgroup, product_type)
-        return [
-          get_rhev_hypervisor_deployment_overrides,
-          get_rhev_engine_deployment_overrides(deployment, hostgroup, product_type),
-          get_rhev_self_hosted_deployment_overrides(deployment, hostgroup, product_type)
-        ]
-      end
-
-      def get_rhev_hypervisor_deployment_overrides()
-        repositories = SETTINGS[:fusor][:content][:rhevh].map { |p| p[:repository_set_label] if p[:repository_set_label] =~ /rpms$/ }.compact
-        return {
-          :hostgroup_name => "RHV-Hypervisor",
-          :puppet_classes =>
-          [
-            {
-              :name => "ovirt::hypervisor::subscription",
-              :parameters =>
-              [
-                { :name => "hypervisor_repositories", :value => repositories }
-              ]
-            }
-          ]
-        }
-      end
-
-      def get_rhev_engine_deployment_overrides(deployment, hostgroup, product_type)
-        repositories = SETTINGS[:fusor][:content][:rhevm].map { |p| p[:repository_set_label] if p[:repository_set_label] =~ /rpms$/ }.compact
-        return {
-          :hostgroup_name => "RHV-Engine",
-          :puppet_classes =>
-          [
-            {
-              :name => "ovirt",
-              :parameters =>
-              [
-                { :name => "deploy_cfme", :value => deployment.deploy_cfme }
-              ]
-            },
-            {
-              :name => "ovirt::engine::config",
-              :parameters =>
-              [
-                { :name => "hosts_addresses", :value => host_addresses(deployment, hostgroup) },
-                # Setting root password based upon the deployment vs the hostgroup.  This is
-                # necessary because the puppet parameter needs to store it in clear text and
-                # the hostgroup stores it using one-time encryption.
-                { :name => "root_password", :value => root_password(deployment, product_type) },
-                { :name => "dc_name", :value => deployment.rhev_data_center_name },
-                { :name => "cluster_name", :value => deployment.rhev_cluster_name },
-                { :name => "storage_name", :value => deployment.rhev_storage_name },
-                { :name => "storage_address", :value => deployment.rhev_storage_address },
-                { :name => "storage_type", :value => deployment.rhev_storage_type },
-                { :name => "storage_path", :value => deployment.rhev_share_path },
-                { :name => "cpu_type", :value => deployment.rhev_cpu_type },
-                { :name => "export_name", :value => deployment.rhev_export_domain_name },
-                { :name => "export_address", :value => deployment.rhev_export_domain_address },
-                { :name => "export_path", :value => deployment.rhev_export_domain_path },
-                { :name => "mac_address_range", :value => get_mac_address_range(deployment.id)}
-              ]
-            },
-            {
-              :name => "ovirt::engine::setup",
-              :parameters =>
-              [
-                { :name => "storage_type", :value => deployment.rhev_storage_type },
-                { :name => "admin_password", :value => deployment.rhev_engine_admin_password },
-                { :name => "db_password", :value => deployment.rhev_engine_admin_password },
-                { :name => "engine_fqdn", :value => "#{deployment.rhev_engine_host_name}.#{hostgroup.domain.name}" },
-                # Disable automatic setup of a local nfs share for the ISO domain
-                { :name => "nfs_config_enabled", :value => false }
-              ]
-            },
-            {
-              :name => "ovirt::engine::subscription",
-              :parameters =>
-              [
-                { :name => "engine_repositories", :value => repositories }
-              ]
-            }
-          ]
-        }
-      end
-
-      def get_rhev_self_hosted_deployment_overrides(deployment, hostgroup, product_type)
-        engine_repos = SETTINGS[:fusor][:content][:rhevm].map { |p| p[:repository_set_label] if p[:repository_set_label] =~ /rpms$/ }.compact
-        hyp_repos = SETTINGS[:fusor][:content][:rhevsh].map { |p| p[:repository_set_label] if p[:repository_set_label] =~ /rpms$/ }.compact
-
-        return {
-          :hostgroup_name => "RHV-Self-hosted",
-          :puppet_classes =>
-          [
-            {
-              :name => "ovirt",
-              :parameters =>
-              [
-                { :name => "deploy_cfme", :value => deployment.deploy_cfme }
-              ]
-            },
-            {
-              :name => "ovirt::self_hosted::config",
-              :parameters =>
-              [
-                { :name => "hosts_addresses", :value => host_addresses(deployment, hostgroup) },
-                { :name => "mac_address_range", :value => get_mac_address_range(deployment.id)}
-              ]
-            },
-            {
-              :name => "ovirt::self_hosted::setup",
-              :parameters =>
-              [
-                # Setting root password based upon the deployment vs the hostgroup.  This is
-                # necessary because the puppet parameter needs to store it in clear text and
-                # the hostgroup stores it using one-time encryption.
-                { :name => "root_password", :value => root_password(deployment, product_type) },
-                { :name => "dc_name", :value => deployment.rhev_data_center_name },
-                { :name => "satellite_fqdn", :value => ::SmartProxy.first.hostname },
-                { :name => "gateway", :value => ::Subnet.find_by_name('default').gateway },
-                { :name => "cluster_name", :value => deployment.rhev_cluster_name },
-                { :name => "cpu_type", :value => deployment.rhev_cpu_type },
-                { :name => "cpu_model", :value => get_cpu_model(deployment.rhev_cpu_type) },
-                { :name => "storage_name", :value => deployment.rhev_storage_name },
-                { :name => "storage_address", :value => deployment.rhev_storage_address },
-                { :name => "storage_type", :value => deployment.rhev_storage_type },
-                { :name => "storage_path", :value => deployment.rhev_share_path },
-                { :name => "engine_mac_address", :value => Utils::Fusor::MacAddresses.generate_mac_address },
-                { :name => "engine_fqdn", :value => "#{deployment.label.tr('_', '-')}-rhev-engine.#{hostgroup.domain.name}" },
-                { :name => "engine_admin_password", :value => deployment.rhev_engine_admin_password },
-                { :name => "engine_db_password", :value => deployment.rhev_engine_admin_password },
-                { :name => "engine_activation_key", :value => hostgroup.group_parameters.where(:name => 'kt_activation_keys').try(:first).try(:value) },
-                { :name => "export_name", :value => deployment.rhev_export_domain_name },
-                { :name => "export_address", :value => deployment.rhev_export_domain_address },
-                { :name => "export_path", :value => deployment.rhev_export_domain_path },
-                { :name => "hosted_storage_name", :value => deployment.hosted_storage_name },
-                { :name => "hosted_storage_address", :value => deployment.hosted_storage_address },
-                { :name => "hosted_storage_path", :value => deployment.hosted_storage_path },
-                { :name => "engine_repositories", :value => engine_repos }
-              ]
-            },
-            {
-              :name => "ovirt::self_hosted::subscription",
-              :parameters =>
-              [
-                { :name => "self_hosted_repositories", :value => hyp_repos }
-              ]
-            }
-          ]
-        }
-      end
-
       def root_password(deployment, product_type)
         case product_type
           when "rhev"
@@ -368,15 +190,6 @@ module Actions
           when "cfme"
             deployment.cfme_root_password
         end
-      end
-
-      def host_addresses(deployment, hostgroup)
-        addresses = deployment.discovered_hosts.inject([]) do |result, host|
-          if host.name && hostgroup.domain
-            result << [host.name, hostgroup.domain.name].join('.')
-          end
-        end
-        addresses.join(',')
       end
 
       def find_hostgroup(organization_id, hostgroup_name, parent)
@@ -417,35 +230,6 @@ module Actions
         name = hostgroup[:activation_key][:name]
         hg_name = hostgroup[:name]
         return [name, deployment.label, hg_name].map { |str| str.tr('-', "_") }.join('-')
-      end
-
-      def get_cpu_model(cpu_type)
-        self_hosted_cpu_map = {
-          'Intel Conroe Family' => 'model_Conroe',
-          'Intel Penryn Family' => 'model_Penryn',
-          'Intel Nehalem Family' => 'model_Nehalem',
-          'Intel Westmere Family' => 'model_Westmere',
-          'Intel SandyBridge Family' => 'model_SandyBridge',
-          'Intel Haswell Family' => 'model_Haswell',
-          'Intel Haswell-noTSX Family' => 'model_Haswell-noTSX',
-          'Intel Broadwell Family' => 'model_Broadwell',
-          'Intel Broadwell-noTSX Family' => 'model_Broadwell-noTSX',
-          'AMD Opteron G1' => 'model_Opteron_G1',
-          'AMD Opteron G2' => 'model_Opteron_G2',
-          'AMD Opteron G3' => 'model_Opteron_G3',
-          'AMD Opteron G4' => 'model_Opteron_G4',
-          'AMD Opteron G5' => 'model_Opteron_G5',
-          # 'IBM POWER 8' => 'UNSUPPORTED',
-        }
-        return self_hosted_cpu_map[cpu_type]
-      end
-
-      def get_mac_address_range(deployment_id)
-        fail _('Too many deployments to generate a unique mac address pool') if deployment_id > 255
-        identifier = deployment_id.to_s(16).rjust(2, '0')
-        start = "00:1A:#{identifier}:00:00:00"
-        end_ = "00:1A:#{identifier}:FF:FF:FF"
-        "#{start},#{end_}"
       end
     end
   end
