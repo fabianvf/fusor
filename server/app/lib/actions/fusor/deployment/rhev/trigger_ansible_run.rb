@@ -50,7 +50,7 @@ module Actions
             ["[self_hosted_first_host]",
              "#{first_host.fqdn} mac_address=#{first_host.mac}",
              "[self_hosted_additional_hosts]",
-             "#{hypervisors.map { |h| "#{h.fqdn} host_id=#{h.id} mac_address=#{h.mac}" }.join("\n")}",
+             "#{hypervisors.map.with_index { |h, i| "#{h.fqdn} host_id=#{i+2} mac_address=#{h.mac}" }.join("\n")}",
              "[self_hosted:children]",
              "self_hosted_first_host",
              "self_hosted_additional_hosts",
