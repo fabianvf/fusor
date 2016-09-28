@@ -20,7 +20,7 @@ module Actions
             playbook = "/usr/share/ansible-ovirt/#{deployment.rhev_is_self_hosted ? 'self_hosted' : 'engine_and_hypervisor'}.yml"
             inventory = generate_inventory(deployment)
             vars = generate_vars(deployment)
-            config_dir = "#{Rails.root}/tmp/#{deployment.label}"
+            config_dir = "#{Rails.root}/tmp/ansible-ovirt/#{deployment.label}"
             private_key = generate_private_key(deployment, "#{config_dir}/.ssh")
             environment = get_environment(deployment, config_dir, private_key)
 
