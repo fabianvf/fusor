@@ -80,6 +80,7 @@ module OSEInstaller
       # if user is not root, we need to enable ansible_sudo flag
       if !opts[:username].eql? "root"
         template = template.gsub(/#ansible_sudo=true/, "ansible_sudo=true")
+        template = template.gsub(/#ansible_become=true/, "ansible_become=true")
       end
 
       # master and worker node list

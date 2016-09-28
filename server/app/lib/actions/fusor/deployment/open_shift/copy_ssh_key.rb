@@ -30,7 +30,7 @@ module Actions
             ::Fusor.log.debug "================ Copy SSH Key run method ===================="
             deployment = ::Fusor::Deployment.find(input[:deployment_id])
             key_type = input[:key_type]
-            key_path = File.join(Rails.root, '.ssh', 'openshift', "#{@deployment.label}-#{@deployment.id}")
+            key_path = File.join(Rails.root, '.ssh', 'openshift', "#{deployment.label}-#{deployment.id}")
             keyutils = Utils::Fusor::SSHKeyUtils.new(deployment, key_type, key_path)
 
             # Generate SSH Keys

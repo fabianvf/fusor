@@ -25,7 +25,7 @@ module Utils
       end
 
       def copy_keys_to_user(hostname, username, password)
-        copy_keys_to_root(hostname)
+        copy_keys_to_root(hostname, password)
         client = Utils::Fusor::SSHConnection.new(hostname, 'root', password)
         client.execute("useradd #{username}")
         client.execute("echo '#{username}        ALL=(ALL)       NOPASSWD: ALL' >> /etc/sudoers")
