@@ -33,12 +33,14 @@ module Actions
 
               concurrence do
                 hosts_with_hostgroups(deployment).each do |host, hostgroup|
-                  plan_action(::Actions::Fusor::Host::TriggerProvisioning,
-                              deployment,
-                              hostgroup,
-                              host)
-                  plan_action(::Actions::Fusor::Host::WaitUntilProvisioned,
-                              host.id)
+                  sequence do
+                    plan_action(::Actions::Fusor::Host::TriggerProvisioning,
+                                deployment,
+                                hostgroup,
+                                host)
+                    plan_action(::Actions::Fusor::Host::WaitUntilProvisioned,
+                                host.id)
+                  end
                 end
               end
 
