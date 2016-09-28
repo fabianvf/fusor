@@ -21,56 +21,28 @@ module Actions
 
           def plan(deployment)
             super(deployment)
+            if deployment.rhev_is_self_hosted
+                fail _("Unable to locate a RHV Hypervisor Host") unless (deployment.discovered_hosts.count > 0)
+            else
+                fail _("Unable to locate a RHV Engine Host") unless deployment.rhev_engine_host
+            end
 
             sequence do
-              if deployment.rhev_is_self_hosted
-                # Self-hosted RHEV
-                fail _("Unable to locate an RHV Hypervisor Host") unless (deployment.discovered_hosts.count > 0)
 
+              plan_action(::Actions::Fusor::Deployment::Rhev::CreateEngineHostRecord, deployment, 'RHV-Engine') if deployment.rhev_is_self_hosted
 
-                plan_action(::Actions::Fusor::Deployment::Rhev::CreateEngineHostRecord, deployment, 'RHV-Self-hosted')
-
-                concurrence do
-                  deployment.discovered_hosts.each do |host|
-                    plan_action(::Actions::Fusor::Host::TriggerProvisioning,
-                                deployment,
-                                "RHV-Self-hosted",
-                                host)
-                    plan_action(::Actions::Fusor::Host::WaitUntilProvisioned,
-                                host.id)
-                  end
-                end
-
-                plan_action(::Actions::Fusor::Deployment::Rhev::TriggerAnsibleRun, deployment)
-
-              else
-                # Hypervisor + Engine separate
-
-                fail _("Unable to locate an RHV Engine Host") unless deployment.rhev_engine_host
-
-                deployment.discovered_hosts.each do |host|
+              concurrence do
+                hosts_with_hostgroups(deployment).each do |host, hostgroup|
                   plan_action(::Actions::Fusor::Host::TriggerProvisioning,
                               deployment,
-                              "RHV-Hypervisor",
+                              hostgroup,
                               host)
+                  plan_action(::Actions::Fusor::Host::WaitUntilProvisioned,
+                              host.id)
                 end
-
-                concurrence do
-                  deployment.discovered_hosts.each do |host|
-                    plan_action(::Actions::Fusor::Host::WaitUntilProvisioned,
-                                host.id, true)
-                  end
-                end
-                plan_action(::Actions::Fusor::Host::TriggerProvisioning,
-                            deployment,
-                            "RHV-Engine",
-                            deployment.rhev_engine_host)
-
-
-                plan_action(::Actions::Fusor::Host::WaitUntilProvisioned,
-                            deployment.rhev_engine_host.id, true)
-
               end
+
+              plan_action(::Actions::Fusor::Deployment::Rhev::TriggerAnsibleRun, deployment)
               plan_action(::Actions::Fusor::Deployment::Rhev::WaitForDataCenter,
                             deployment)
               plan_action(::Actions::Fusor::Deployment::Rhev::CreateCr, deployment)
@@ -80,8 +52,12 @@ module Actions
 
           private
 
-          def hosts_to_provision(deployment)
-            deployment.discovered_hosts + [deployment.rhev_engine_host]
+          def hosts_with_hostgroups(deployment)
+            if deployment.rhev_is_self_hosted
+              deployment.discovered_hosts.map { |h| [h, 'RHV-Self-hosted']}
+            else
+              deployment.discovered_hosts.map{ |h| [h, 'RHV-Hypervisor']}.push [deployment.rhev_engine_host, 'RHV-Engine']
+            end
           end
         end
       end
