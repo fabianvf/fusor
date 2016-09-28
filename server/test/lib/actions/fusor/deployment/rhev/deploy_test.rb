@@ -47,7 +47,7 @@ module Actions::Fusor::Deployment::Rhev
       assert_action_planed_with(@deploy,
                                 CreateEngineHostRecord,
                                 @deployment,
-                                'RHV-Self-hosted')
+                                'RHV-Engine')
 
       first_host, *additional_hosts = *@deployment.rhev_hypervisor_hosts
 
