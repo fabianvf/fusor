@@ -22,9 +22,9 @@ module Actions
           def plan(deployment)
             super(deployment)
             if deployment.rhev_is_self_hosted
-                fail _("Unable to locate a RHV Hypervisor Host") unless (deployment.discovered_hosts.count > 0)
+              fail _("Unable to locate a RHV Hypervisor Host") unless (deployment.discovered_hosts.count > 0)
             else
-                fail _("Unable to locate a RHV Engine Host") unless deployment.rhev_engine_host
+              fail _("Unable to locate a RHV Engine Host") unless deployment.rhev_engine_host
             end
 
             sequence do
@@ -54,9 +54,9 @@ module Actions
 
           def hosts_with_hostgroups(deployment)
             if deployment.rhev_is_self_hosted
-              deployment.discovered_hosts.map { |h| [h, 'RHV-Self-hosted']}
+              deployment.discovered_hosts.map { |h| [h, 'RHV-Self-hosted'] }
             else
-              deployment.discovered_hosts.map{ |h| [h, 'RHV-Hypervisor']}.push [deployment.rhev_engine_host, 'RHV-Engine']
+              deployment.discovered_hosts.map { |h| [h, 'RHV-Hypervisor'] }.push [deployment.rhev_engine_host, 'RHV-Engine']
             end
           end
         end
