@@ -45,12 +45,6 @@ module Actions
           private
 
           def create_host(deployment, hostgroup, mac)
-            # TODO(fabianvf): Temporary fix while we figure out why this keeps flipping
-            # Feel free to yell at fabian if this is still here when we hit GA
-            redhat = Operatingsystem.find_by_title('RedHat 7.3')
-            rhel_server = Operatingsystem.find_by_title('RHEL Server 7.3')
-            os = redhat.nil? ? rhel_server : redhat
-
             rhevm = {"name" => deployment.rhev_self_hosted_engine_hostname,
                      "hostgroup_id" => hostgroup.id,
                      "location_id" => Location.find_by_name('Default Location').id,
@@ -60,7 +54,7 @@ module Actions
                      "enabled" => "1",
                      "managed" => "1",
                      "architecture_id" => Architecture.find_by_name('x86_64')['id'],
-                     "operatingsystem_id" => os['id'],
+                     "operatingsystem_id" => hostgroup.os.id,
                      "ptable_id" => Ptable.find { |p| p["name"] == "Kickstart default" }.id,
                      "domain_id" => 1,
                      "root_pass" => deployment.rhev_root_password,
