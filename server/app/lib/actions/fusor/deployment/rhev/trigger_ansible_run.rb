@@ -147,7 +147,7 @@ module Actions
             tries ||= 10
             keyutils.copy_keys_to_root host, password
           rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH
-            ::Fusor.log.debug "======= SSH is not yet available on host #{host}, #{tries-1} retries remaining ======"
+            ::Fusor.log.debug "======= SSH is not yet available on host #{host}, #{tries - 1} retries remaining ======"
             if (tries -= 1) > 0
               ::Fusor.log.debug "====== Sleeping for #{time_to_sleep} seconds"
               sleep time_to_sleep
