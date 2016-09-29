@@ -129,16 +129,34 @@ module Actions
 
             keyutils.generate_ssh_keys
 
+
             if !deployment.rhev_is_self_hosted
-              keyutils.copy_keys_to_root deployment.rhev_engine_host.name, deployment.rhev_root_password
+              distribute_key_to_host keyutils, deployment.rhev_engine_host.name, deployment.rhev_root_password
             end
 
             deployment.discovered_hosts.each do |host|
-              keyutils.copy_keys_to_root host.name, deployment.rhev_root_password
+              distribute_key_to_host keyutils, host.name, deployment.rhev_root_password
             end
 
             keyutils.get_ssh_private_key_path
           end
+
+
+          def distribute_key_to_host(keyutils, host, password)
+            time_to_sleep = 30
+            tries ||= 10
+            keyutils.copy_keys_to_root host, password
+          rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH
+            ::Fusor.log.debug "======= SSH is not yet available on host #{host}, #{tries-1} retries remaining ======"
+            if (tries -= 1) > 0
+              ::Fusor.log.debug "====== Sleeping for #{time_to_sleep} seconds"
+              sleep time_to_sleep
+              retry
+            else
+              raise
+            end
+          end
+
 
           def trigger_ansible_run(playbook, vars, config_dir, environment)
             cmd = "ansible-playbook #{playbook} -i #{config_dir}/inventory -e '#{vars.to_json}'"
