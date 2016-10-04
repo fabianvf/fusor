@@ -39,11 +39,7 @@ module Actions
             end
             rpm_view_version = rpm_view.version(deployment.organization.library)
 
-            #The puppet view is created during the seeding of the plugin; therefore, we should not need to create it
-            puppet_view = find_content_view(deployment.organization, puppet_content_view_name)
-            puppet_view_version = puppet_view.try(:version, deployment.organization.library)
-
-            component_version_ids = [rpm_view_version.id, puppet_view_version.try(:id)].compact
+            component_version_ids = [rpm_view_version.id].compact
             unless component_version_ids.blank? ||
                    component_version_ids.to_set.subset?(composite_view.component_ids.to_set)
               plan_action(::Actions::Katello::ContentView::Update, composite_view,
@@ -60,19 +56,11 @@ module Actions
                           deployment.lifecycle_environment)
             end
 
-            plan_self(:content_view_id => composite_view.id,
-                      :environment_id => deployment.lifecycle_environment.id)
+            plan_self()
           end
         end
 
         def run
-          content_view = ::Katello::ContentView.find(input[:content_view_id])
-          environment  = ::Katello::KTEnvironment.find(input[:environment_id])
-
-          # The foreman puppet environment is typically updated in the finalize phase
-          # of content publish/promotion; however, we need this to occur earlier,
-          # since we'll need the puppet classes created by the update.
-          ::Katello::Foreman.update_puppet_environment(content_view, environment)
         end
 
         private

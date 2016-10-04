@@ -48,6 +48,7 @@ module Actions
             rhevm = {"name" => deployment.rhev_self_hosted_engine_hostname,
                      "hostgroup_id" => hostgroup.id,
                      "location_id" => Location.find_by_name('Default Location').id,
+                     "environment_id" => lifecycle_environment(deployment),
                      "organization_id" => deployment["organization_id"],
                      "subnet_id" => Subnet.find_by_name('default').id,
                      "enabled" => "1",
@@ -65,6 +66,14 @@ module Actions
               return host
             else
               fail _("RHV Engine Host Record creation with mac #{mac} failed with errors: #{host.errors.messages}")
+            end
+          end
+
+          def lifecycle_environment(deployment)
+            if deployment.lifecycle_environment_id
+              deployment.lifecycle_environment_id
+            else
+              deployment.organization.library.id
             end
           end
 
