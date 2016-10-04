@@ -50,7 +50,6 @@ module Actions
       private
 
       # TODO: break up this method
-      # rubocop:disable MethodLength
       def find_or_ensure_hostgroup(deployment, product_type, organization_id, lifecycle_environment_id,
                                    hostgroup_settings)
 
@@ -69,32 +68,16 @@ module Actions
 
           if lifecycle_environment_id
             lifecycle_environment = ::Katello::KTEnvironment.find(lifecycle_environment_id)
-            content_view_puppet_environment = content_view.puppet_env(lifecycle_environment)
           else
             lifecycle_environment = deployment.organization.library
-            puppet_content_view = find_content_view(organization_id, default_puppet_content_view_name)
-            content_view_puppet_environment = puppet_content_view.puppet_env(lifecycle_environment)
           end
-          puppet_environment = content_view_puppet_environment.puppet_environment
 
-          if puppet_class_settings = hostgroup_settings[:puppet_classes]
-            puppet_class_names = puppet_class_settings.map { |c| c[:name] }
-            puppet_classes = Puppetclass.where(:name => puppet_class_names).
-                joins(:environment_classes).
-                where("environment_classes.environment_id in (?)", puppet_environment.id).uniq
-            found_puppet_names = puppet_classes.map { |c| c.name }
-            missing_puppet_classes = puppet_class_names - found_puppet_names
-            fail _("Missing puppet classes: #{missing_puppet_classes}") unless missing_puppet_classes.empty?
-            puppet_class_ids = puppet_classes.map(&:id)
-          end
 
           hostgroup_params = { :parent_id => parent.try(:id),
                                :organization_ids => [organization_id] }
-
           if name_setting = hostgroup_settings[:name]
             # this host group is a child of the deployment group
             hostgroup_params[:name] = name_setting
-            hostgroup_params[:puppetclass_ids] = puppet_class_ids
             if hostgroup_settings[:os]
               operating_system = ::Redhat.where(:name => hostgroup_settings[:os], :major => hostgroup_settings[:major], :minor => hostgroup_settings[:minor]).first
               hostgroup_params[:operatingsystem_id] = operating_system.try(:id)
@@ -125,7 +108,6 @@ module Actions
             hostgroup_params[:name] = deployment.label
             hostgroup_params[:title] = deployment.label
             hostgroup_params[:lifecycle_environment_id] = lifecycle_environment.id
-            hostgroup_params[:environment_id] = puppet_environment.try(:id)
             hostgroup_params[:content_view_id] = content_view.try(:id)
             hostgroup_params[:content_source_id] = default_capsule_id
             hostgroup_params[:puppet_ca_proxy_id] = default_capsule_id
@@ -156,29 +138,6 @@ module Actions
             ::GroupParameter.create!(:reference_id => hostgroup.id,
                                      :name => "kt_activation_keys",
                                      :value => activation_key_name)
-          end
-        end
-        apply_setting_parameter_overrides(hostgroup, hostgroup_settings, puppet_environment)
-      end
-
-      def apply_setting_parameter_overrides(hostgroup, hostgroup_settings, puppet_environment)
-        # Go through the hostgroup_settings.  If any of the puppet classes have a
-        # parameter override specified, set it for the host group.
-        if puppet_class_settings = hostgroup_settings[:puppet_classes]
-          puppet_class_settings.each do |puppet_class_setting|
-
-            if parameter_settings = puppet_class_setting[:parameters]
-              parameter_settings.each do |parameter_setting|
-                unless parameter_setting[:override].blank?
-                  puppet_class = Puppetclass.where(:name => puppet_class_setting[:name]).
-                      joins(:environment_classes).
-                      where("environment_classes.environment_id in (?)", puppet_environment.id).first
-
-                  hostgroup.set_param_value_if_changed(puppet_class, parameter_setting[:name],
-                                                       parameter_setting[:override])
-                end
-              end
-            end
           end
         end
       end
